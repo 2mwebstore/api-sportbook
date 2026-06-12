@@ -1,5 +1,19 @@
 {
   "framework": "go",
+<<<<<<< HEAD
   "buildCommand": "go build ./cmd/...",
   "outputDirectory": "."
 }
+=======
+  "buildCommand": "go build -o bootstrap ./cmd/server",
+  "outputDirectory": ".",
+  "env": {
+    "APP_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "GO_BUILD_FLAGS": "-ldflags '-s -w'"
+    }
+  }
+}
+>>>>>>> 5fb7f9d (update last)

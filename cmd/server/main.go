@@ -23,8 +23,12 @@ func main() {
 	utils.InitR2()
 
 	db := database.Connect()
-	database.AutoMigrate(db)
-	database.Seed(db)
+
+	// ── Migrations & Seeding (guarded) ────────────────────
+	if os.Getenv("RUN_MIGRATIONS") == "true" {
+		database.AutoMigrate(db)
+		database.Seed(db)
+	}
 
 	// ── Repositories ──────────────────────────────────────
 	userRepo := repositories.NewUserRepository(db)
@@ -61,10 +65,15 @@ func main() {
 
 	routes.RegisterAll(r, permRepo, authCtrl, userCtrl, categoryCtrl, sportClubCtrl, slotCtrl, bannerCtrl, permCtrl)
 
-	port := os.Getenv("APP_PORT")
+	// ── Port (Vercel injects PORT, fallback to APP_PORT) ──
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = os.Getenv("APP_PORT")
+	}
 	if port == "" {
 		port = "8080"
 	}
+
 	log.Printf("server starting on :%s", port)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("server failed: %v", err)
