@@ -34,7 +34,9 @@ func RegisterAll(
 	// ═══════════════════════════════════════════════════════
 	r.POST("/api/v1/auth/register", authCtrl.Register)
 	r.POST("/api/v1/auth/login", authCtrl.Login)
+	r.POST("/api/v1/auth/refresh", authCtrl.RefreshToken)
 	r.POST("/api/v1/admin/auth/login", authCtrl.Login)
+	r.POST("/api/v1/admin/auth/refresh", authCtrl.RefreshToken)
 
 	// ═══════════════════════════════════════════════════════
 	// USERS

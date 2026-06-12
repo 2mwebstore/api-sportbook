@@ -15,6 +15,7 @@ import (
 type AuthService interface {
 	Register(req *dto.RegisterRequest) (*dto.AuthResponse, error)
 	Login(req *dto.LoginRequest) (*dto.AuthResponse, error)
+	RefreshToken(refreshToken string) (*dto.RefreshResponse, error)
 }
 
 type authService struct {
@@ -106,6 +107,46 @@ func (s *authService) Login(req *dto.LoginRequest) (*dto.AuthResponse, error) {
 	_ = s.userRepo.UpdateLastLogin(user.ID)
 
 	return s.buildAuthResponse(user)
+}
+
+func (s *authService) RefreshToken(refreshToken string) (*dto.RefreshResponse, error) {
+	claims, err := utils.ValidateToken(refreshToken)
+	if err != nil {
+		return nil, errors.New("invalid or expired refresh token")
+	}
+
+	// Load fresh user to ensure account still active and get latest role
+	user, err := s.userRepo.FindByID(claims.UserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, err
+	}
+	if !user.IsActive {
+		return nil, errors.New("account is deactivated")
+	}
+
+	email := ""
+	if user.Email != nil {
+		email = *user.Email
+	}
+	phone := ""
+	if user.Phone != nil {
+		phone = *user.Phone
+	}
+
+	// Issue a new access token only — refresh token stays the same
+	accessToken, _, expiresIn, err := utils.GenerateTokenPair(user.ID, string(user.Role), email, phone)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.RefreshResponse{
+		AccessToken: accessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   expiresIn,
+	}, nil
 }
 
 func (s *authService) buildAuthResponse(user *models.User) (*dto.AuthResponse, error) {

@@ -1,5 +1,17 @@
 package dto
 
+// ── Refresh ───────────────────────────────────────────────
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type RefreshResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int64  `json:"expires_in"`
+}
+
 // ── Register ──────────────────────────────────────────────
 
 type RegisterRequest struct {

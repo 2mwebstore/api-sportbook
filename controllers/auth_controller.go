@@ -67,3 +67,24 @@ func (c *AuthController) Login(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, resp)
 }
+
+func (c *AuthController) RefreshToken(ctx *gin.Context) {
+	var req dto.RefreshRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid request body"})
+		return
+	}
+	if errs := c.validate.Struct(req); errs != nil {
+		ctx.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Error:   "validation failed",
+			Details: formatValidationErrors(errs),
+		})
+		return
+	}
+	resp, err := c.authService.RefreshToken(req.RefreshToken)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, resp)
+}
